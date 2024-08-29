@@ -1,5 +1,7 @@
 import requests
 import os
+import time
+
 
 input_file = 'translated_messages.txt'
 ita_api_url = os.getenv('ITA_API_URL', 'https://eitaayar.ir/api/api-hash/sendMessage')
