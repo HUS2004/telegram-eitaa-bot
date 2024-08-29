@@ -1,20 +1,29 @@
 from telethon import TelegramClient, events
 import asyncio
+import json
 import os
 
-# خواندن متغیرهای محیطی
-api_id = os.getenv('TELEGRAM_API_ID', 'default_api_id')
-api_hash = os.getenv('TELEGRAM_API_HASH', 'default_api_hash')
-channel_username = os.getenv('TELEGRAM_CHANNEL_USERNAME', 'AjaNews')
+# بارگذاری تنظیمات از فایل پیکربندی
+with open('config.json', 'r') as config_file:
+    config = json.load(config_file)
 
+api_id = config['api_id']
+api_hash = config['api_hash']
+phone_number = config['phone_number']
+channel_username = 'AjaNews'
+
+# تعریف مسیر برای فایل نشست و فایل لاگ
 session_path = 'anon.session'
 log_file = 'messages.txt'
 
+# ایجاد نمونه جدید از TelegramClient
 client = TelegramClient(session_path, api_id, api_hash)
 
 async def main():
-    await client.start()
+    # شروع به کار TelegramClient
+    await client.start(phone_number)
 
+    # تعریف هندلر رویداد برای پیام‌های جدید در کانال مشخص شده
     @client.on(events.NewMessage(chats=channel_username))
     async def handler(event):
         print(event.message.message)
@@ -25,7 +34,10 @@ async def main():
             print(f"Error writing to file {log_file}: {e}")
 
     print(f"Listening to new messages in {channel_username}...")
+
+    # اجرای کلاینت تا زمان قطع اتصال
     await client.run_until_disconnected()
 
+# اجرای تابع اصلی در حلقه رویداد asyncio
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
