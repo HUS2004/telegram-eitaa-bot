@@ -1,43 +1,38 @@
+import os
 from telethon import TelegramClient, events
 import asyncio
-import json
-import os
 
-# بارگذاری تنظیمات از فایل پیکربندی
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
+# دریافت مقادیر از متغیرهای محیطی
+api_id = os.getenv('TELEGRAM_API_ID')  # API ID شما
+api_hash = os.getenv('TELEGRAM_API_HASH')  # API Hash شما
+channel_username = os.getenv('TELEGRAM_CHANNEL_USERNAME')  # نام کاربری کانال
 
-api_id = config['api_id']
-api_hash = config['api_hash']
-phone_number = config['phone_number']
-channel_username = 'AjaNews'
+if not api_id or not api_hash:
+    raise ValueError("API ID and API Hash must be set as environment variables.")
 
-# تعریف مسیر برای فایل نشست و فایل لاگ
-session_path = 'anon.session'
-log_file = 'messages.txt'
+# تعریف مسیر برای فایل نشست
+session_path = 'anon.session'  # مسیر فایل نشست
 
-# ایجاد نمونه جدید از TelegramClient
+# ایجاد نمونه جدید TelegramClient
 client = TelegramClient(session_path, api_id, api_hash)
 
 async def main():
-    # شروع به کار TelegramClient
-    await client.start(phone_number)
+    # شروع Telegram client
+    await client.start()
 
-    # تعریف هندلر رویداد برای پیام‌های جدید در کانال مشخص شده
+    # تعریف یک هندلر برای پیام‌های جدید
     @client.on(events.NewMessage(chats=channel_username))
     async def handler(event):
         print(event.message.message)
         try:
-            with open(log_file, "a", encoding="utf-8") as f:
+            with open('messages.txt', "a", encoding="utf-8") as f:
                 f.write(f"{event.message.message}\n")
         except IOError as e:
-            print(f"Error writing to file {log_file}: {e}")
+            print(f"Error writing to file: {e}")
 
     print(f"Listening to new messages in {channel_username}...")
-
-    # اجرای کلاینت تا زمان قطع اتصال
     await client.run_until_disconnected()
 
-# اجرای تابع اصلی در حلقه رویداد asyncio
+# اجرای تابع اصلی
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
